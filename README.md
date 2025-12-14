@@ -1,1 +1,1 @@
-![Logo DeMiST](DeMiST/assets/logo.png)
+![Logo DeMiST](assets/logo.png)
