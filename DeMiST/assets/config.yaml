@@ -1,0 +1,10 @@
+dataset:
+  raw_files:
+    globular: "./data/raw/globular_proteins.fasta"
+    disordered: "./data/raw/disordered_proteins.fasta"
+    transmembrane: "./data/raw/tm_proteins.fasta"
+  
+  output_dir: "./data/processed"
+  
+  tokenizer_model: "Rostlab/prot_t5_xl_half_uniref50-enc"
+  max_length: 128

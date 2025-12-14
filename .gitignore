@@ -1,0 +1,12 @@
+.aider*
+
+__pycache__/
+*.pyc
+
+data/
+models/
+output/
+wandb/
+
+.vscode/
+.idea/
