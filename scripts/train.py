@@ -84,7 +84,7 @@ def main():
     wandb.init(project="DeMiST")
     trainer.train()
     
-    print("\n🔎 Optimizing decision thresholds on Validation set...")
+    print("\nOptimizing decision thresholds on Validation set...")
     
     val_preds = trainer.predict(dataset["validation"])
     val_logits = val_preds.predictions
@@ -93,12 +93,12 @@ def main():
         val_logits = val_logits[0]  
         
     val_labels = val_preds.label_ids
-    val_probs = scipy.special.expit(val_logits) # same as in metrics.py
+    val_probs = scipy.special.expit(val_logits)
 
     best_thresholds = find_best_thresholds(val_probs, val_labels)
     thresholds_path = os.path.join(training_args.output_dir, "best_thresholds.txt")
     
-    print("\n✅ Optimal Thresholds per Class:")
+    print("\nOptimal Thresholds per Class:")
     with open(thresholds_path, "w") as f:
         for class_idx, threshold in enumerate(best_thresholds):
             class_name = id2label[class_idx] if 'id2label' in locals() else f"Class_{class_idx}"
@@ -108,7 +108,7 @@ def main():
 
     print(f"Thresholds saved to {thresholds_path}")
 
-    print("\n📊 Generating Confusion Matrix on TEST Set...")
+    print("\nGenerating Confusion Matrix on TEST Set...")
 
     test_preds = trainer.predict(dataset["test"])
     test_logits = test_preds.predictions
@@ -123,17 +123,13 @@ def main():
         passed_indices = [c for c, p in enumerate(probs) if p >= best_thresholds[c]]
         
         if len(passed_indices) == 0:
-            # CASE: Nothing passed. 
-            # Option A: Force "Unclassified" (Assign to a new class ID, e.g., -1)
-            # Option B: Fallback to Argmax (Pick the best of the bad options) - easier for standard matrix
+
             final_preds.append(np.argmax(probs)) 
         elif len(passed_indices) == 1:
-            # CASE: Clean winner
+
             final_preds.append(passed_indices[0])
         else:
-            # CASE: Multiple classes passed. Pick the one with highest probability.
-            # (Filter probs to only those that passed, then find max)
-            # Or simpler: just argmax over the whole vector, since the winner likely passed anyway.
+
             final_preds.append(np.argmax(probs))
 
     class_names = [id2label[i] for i in range(len(id2label))]
