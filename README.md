@@ -1,10 +1,8 @@
-# DeMiST: Deep Learning for Microprotein Sequence Transformers
+# DeMiST: Deciphering Microprotein Structural Transitions
 
 <p align="center">
   <img src="assets/logo.png" alt="DeMiST Logo" width="300"/> 
 </p>
-
-**DeMiST** stands for **D**eciphering **Mi**croprotein **S**tructural **T**ransitions.
 
 ### Scope and Technical Stack
 This repository contains the complete pipeline for sequence-based microprotein classification:
