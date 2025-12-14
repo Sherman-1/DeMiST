@@ -1,10 +1,31 @@
 dataset:
   raw_files:
-    globular: "./data/raw/globular_proteins.fasta"
-    disordered: "./data/raw/disordered_proteins.fasta"
-    transmembrane: "./data/raw/tm_proteins.fasta"
-  
+    globular:    "/store/EQUIPES/BIM/MEMBERS/simon.herman/Micro/generate_training_dataset/Folded/folded_data/globular_representatives_unchanged.fasta"
+    molten:      "/store/EQUIPES/BIM/MEMBERS/simon.herman/Micro/generate_training_dataset/Folded/folded_data/molten_representatives_unchanged.fasta"
+    transmembrane: "/store/EQUIPES/BIM/MEMBERS/simon.herman/Micro/generate_training_dataset/Transmembranes/transmembrane_data_05_margin/combined/elong_with_uniprot_representatives.fasta"
+    disordered:  "/store/EQUIPES/BIM/MEMBERS/simon.herman/Micro/generate_training_dataset/Disorder/disordered_data/representative_disordered_sequences.fasta"
+    shuffled_globular: "/store/EQUIPES/BIM/MEMBERS/simon.herman/Micro/generate_training_dataset/Folded/folded_data/globular_representatives_shuffled.fasta"
+    shuffled_molten:   "/store/EQUIPES/BIM/MEMBERS/simon.herman/Micro/generate_training_dataset/Folded/folded_data/molten_representatives_shuffled.fasta"
+
+  max_samples_per_class : 2500
+
   output_dir: "./data/processed"
-  
+
   tokenizer_model: "Rostlab/prot_t5_xl_half_uniref50-enc"
   max_length: 128
+
+model:
+  checkpoint: "Rostlab/prot_t5_xl_half_uniref50-enc"
+  
+  # LoRA Config
+  use_lora: true
+  lora_r: 8
+  lora_alpha: 32
+  lora_dropout: 0.1
+  lora_target_modules: ["q", "v"] 
+
+hyperparameters:
+  lr: 1e-4
+  batch_size: 32
+  epochs: 10
+  weight_decay: 1e-2

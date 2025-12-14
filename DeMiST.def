@@ -1,0 +1,101 @@
+BOOTSTRAP: docker
+FROM: nvidia/cuda:11.8.0-devel-ubuntu20.04 
+
+%files
+    # Copy requirements from host to container
+    requirements.txt /opt/requirements.txt
+
+%post
+
+    export DEBIAN_FRONTEND=noninteractive
+    mkdir -p /tmp/apt/cache
+    mkdir -p /tmp/apt/lists
+    # Avoid downloading everything again if killed
+    echo 'Dir::Cache "/tmp/apt/cache";' > /etc/apt/apt.conf.d/99custom
+    echo 'Dir::State::Lists "/tmp/apt/lists";' >> /etc/apt/apt.conf.d/99custom
+
+    apt-get clean
+    apt-get update && apt-get install -y --no-install-recommends \
+        openssh-server \
+        build-essential \
+        wget \
+        curl \
+        git \
+        libopenmpi-dev \
+        libssl-dev \
+        libaio1 \
+        libaio-dev \
+        libffi-dev \
+        libxml2-dev \
+        libxslt1-dev \
+        zlib1g-dev \
+        libjpeg-dev \
+        libpng-dev \
+        libopenblas-dev \
+        libblas-dev \
+        liblapack-dev \
+        libhdf5-serial-dev \
+        libcurl4-openssl-dev \
+        make \
+        g++ \
+        libprotobuf-dev \
+        protobuf-compiler \
+        libgoogle-perftools-dev \
+        python3-dev \
+        python3-pip 
+
+    mkdir -p /var/run/sshd
+    chmod 0755 /var/run/sshd
+
+    apt-get remove --purge --auto-remove -y cmake
+
+    cd /opt
+    curl -LO https://github.com/Kitware/CMake/releases/download/v3.31.7/cmake-3.31.7-linux-x86_64.tar.gz
+    tar -xzf cmake-3.31.7-linux-x86_64.tar.gz
+
+    export CMAKE_ROOT=/opt/cmake-3.31.7-linux-x86_64/share/cmake-3.31
+    export PATH=/opt/cmake-3.31.7-linux-x86_64/bin:$PATH
+
+    echo 'export CMAKE_ROOT=/opt/cmake-3.31.7-linux-x86_64/share/cmake-3.31' >> /etc/profile.d/cmake.sh
+    echo 'export PATH=/opt/cmake-3.31.7-linux-x86_64/bin:$PATH' >> /etc/profile.d/cmake.sh
+
+    rm cmake-3.31.7-linux-x86_64.tar.gz
+
+    cmake --version
+
+    apt-get install -y --no-install-recommends libpmi1-pmix libpmi2-pmix libpmix-dev libpmix2 libopenmpi-dev libopenmpi3 libpmi-pmix-dev libmpich12
+
+
+    mkdir -p /tmp/pip/cache
+
+    python3 -m pip install \
+        pip==25.0 \
+        setuptools==75.3.0
+
+    python3 -m pip install \
+        torch==2.0.0+cu118 \
+        --extra-index-url https://download.pytorch.org/whl/cu118 
+
+    python3 -m pip install --no-cache-dir -r /opt/requirements.txt
+
+
+    git clone https://github.com/deepspeedai/DeepSpeed /DeepSpeed && \
+        cd /DeepSpeed && \
+        python3 -m pip install .
+
+    git clone --branch v0.2.0 https://github.com/google/sentencepiece.git /sentencepiece && \
+        cd /sentencepiece && \
+        mkdir build && cd build && \
+        cmake .. -DSPM_ENABLE_SHARED=OFF -DCMAKE_INSTALL_PREFIX=./root && \
+        make install && \
+        cd ../python && \
+        python3 setup.py bdist_wheel && \
+        python3 -m pip install dist/sentencepiece*.whl && \
+        rm -rf /sentencepiece
+
+    echo 'export LD_LIBRARY_PATH=/.singularity.d/libs:$LD_LIBRARY_PATH' >> /etc/bash.bashrc
+    echo 'export LD_LIBRARY_PATH=/.singularity.d/libs:$LD_LIBRARY_PATH' >> /etc/profile
+
+%environment
+    export PATH="/usr/local/bin:$PATH"
+    export PYTHONUNBUFFERED=1
